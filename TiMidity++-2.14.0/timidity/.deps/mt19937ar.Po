@@ -1,3 +1,0 @@
-mt19937ar.o: mt19937ar.c /usr/include/stdc-predef.h
-
-/usr/include/stdc-predef.h:
