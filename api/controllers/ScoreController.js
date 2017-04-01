@@ -129,5 +129,30 @@ module.exports = {
             });
 
         });
-    }
+    },
+    'convertMidi': function(req, res) {
+        var fs = require('fs');
+        var uuid = require('uuid');
+        var uid = uuid();
+        req.file('myFile.mid').upload({saveAs:uid+'.mid'},function (err, uploadedFiles){
+          if (err) return res.send(500, err);
+          
+            var wavF = uploadedFiles[0].fd.slice(0,-3) + 'wav';
+            const exec = require('child_process').exec;
+            
+            var command = 'timidity ' + uploadedFiles[0].fd + ' -Ow -o ' + wavF;
+            exec(command, function(err, stdout, stderr) {
+                if(err) {
+                  sails.log.debug(err);
+                }
+               
+                sails.log.debug(stdout);
+                sails.log.debug(stderr);
+                var buffer = fs.readFileSync(wavF);
+                res.set('Content-Type', 'audio/wav');
+                res.send(buffer);
+            });
+            
+          });
+        }
 };

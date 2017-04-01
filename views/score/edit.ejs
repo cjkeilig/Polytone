@@ -1,5 +1,27 @@
 <script>
       'use strict';
+      //below is client side js from soundlcoud. will be used when soundcloud gets back with our client id access
+      //<script src="https://connect.soundcloud.com/sdk/sdk-3.1.2.js">
+      //SC.initialize({
+      //  client_id: 'YOUR_CLIENT_ID',
+      //  redirect_uri: 'http://example.com/callback'
+      //});
+      // initiate auth popup
+      //SC.connect().then(function() {
+      //  return SC.get('/me');
+      //}).then(function(me) {
+      //alert('Hello, ' + me.username);
+      // });
+       
+      // Upload to SoundCloud
+      // When you have recorded a song with the SDK or any Web Audio application,
+      // you can upload it if it's in a format that is accepted
+      //SC.upload({
+      // file: theBlob, // a Blob of your WAV, MP3...
+      //  title: 'This is my sound'
+      //});
+      
+      
       angular.module("myApp", [])
           .controller("scoreCtrl", function ($scope, $http) {
             
@@ -14,6 +36,25 @@
           }
         }
         return newArray.join("|");
+      }
+      function dataURItoBlob(dataURI) {
+      // convert base64/URLEncoded data component to raw binary data held in a string
+      var byteString;
+      if (dataURI.split(',')[0].indexOf('base64') >= 0)
+        byteString = atob(dataURI.split(',')[1]);
+      else
+        byteString = unescape(dataURI.split(',')[1]);
+
+      // separate out the mime component
+      var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+      // write the bytes of the string to a typed array
+      var ia = new Uint8Array(byteString.length);
+      for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      console.log(ia);
+      return new Blob([ia], {type:mimeString});
       }
       var initialServerData = <%if(score.measures.length) { %> <%- JSON.stringify(score.measures) %> <% } else { %> [] <% } %>;
       var serverMeasures = initialServerData.sort(function(a,b) { return a.measureNumber - b.measureNumber}).map(function(a){ return a.measureValue});
@@ -87,6 +128,10 @@
         });
       }
     });
+      $scope.toSoundCloud = function () {
+        console.log($('.download-midi a').attr('href'));
+       // $http({ method: 'POST', url:'/score/convertMidi', data: })
+      }
       $scope.search = function() {
         // Simple GET request example:
         $('.fa-spinner').show();
@@ -118,13 +163,40 @@
   
       }
       $scope.renderMidi = function() {
-        var tuneObjectArray = ABCJS.renderMidi("midi",$scope.abcTune, {},{generateInline:true,qpm:100},{});
+        var tuneObjectArray = ABCJS.renderMidi('midi',$scope.abcTune, {},{generateInline:true,qpm:100, generateDownload:true},{});
         console.log(tuneObjectArray[0]);
         var otherTune = $scope.tuneObjectArray[0];
         var output = document.getElementById('music');
         var tuneObject = tuneObjectArray[0];
-        
+        console.log($('.download-midi a').attr('href'));
         $('.abcjs-midi-start').click(function() { ABCJS.startAnimation(output, otherTune, {hideFinishedMeasures:false,showCursor:true,bpm:100})});
+      
+        var blob = dataURItoBlob($('.download-midi a').attr('href'));
+        var fd = new FormData(document.forms[0]);
+        var xhr = new XMLHttpRequest();
+
+        fd.append('myFile.mid', blob);
+        xhr.open('POST', '/score/convertMidi', true);
+        xhr.responseType = "arraybuffer";
+        xhr.onload = function (oEvent) {
+          var arrayBuffer = xhr.response; // Note: not oReq.responseText
+          if (arrayBuffer) {
+           var byteArray = new Uint8Array(arrayBuffer);
+           console.log(byteArray);
+           var blob = new Blob([byteArray], {type: 'audio/wav'});
+           console.log(blob);
+          }
+        };
+        xhr.send(fd);
+        //$.ajax({
+        //  url:'/score/convertMidi',
+        //  type:'POST',
+        //  data:$('.download-midi a').attr('href'),
+        //  contentType:'audio/midi',
+        //  success: function successCallback() {
+        //  console.log("yay");
+        //  }
+        //});
       }
       $scope.kickoff = function() {
         console.log($scope.selected);
@@ -207,5 +279,6 @@
   </select>
   <input type="submit" ng-click="selectFromApi()">
   <input type="button" ng-click="renderMidi()">
+  <input type="button" ng-click="toSoundCloud()">
   </div>
 </div>
