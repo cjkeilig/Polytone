@@ -170,7 +170,7 @@
         var tuneObject = tuneObjectArray[0];
         console.log($('.download-midi a').attr('href'));
         $('.abcjs-midi-start').click(function() { ABCJS.startAnimation(output, otherTune, {hideFinishedMeasures:false,showCursor:true,bpm:100})});
-      
+        /*
         var blob = dataURItoBlob($('.download-midi a').attr('href'));
         var fd = new FormData(document.forms[0]);
         var xhr = new XMLHttpRequest();
@@ -183,7 +183,7 @@
           if (arrayBuffer) {
            var byteArray = new Uint8Array(arrayBuffer);
            console.log(byteArray);
-           var blob = new Blob([byteArray], {type: 'audio/wav'});
+           var blob = new Blob([byteArray], {type: 'audio/mp3'});
            console.log(blob);
           }
         };
@@ -196,7 +196,7 @@
         //  success: function successCallback() {
         //  console.log("yay");
         //  }
-        //});
+        //}); */
       }
       $scope.kickoff = function() {
         console.log($scope.selected);
@@ -248,37 +248,48 @@
 <div id="paper3"></div>
 </div>
 
-<div id="controls" style="max-width: 50%">
-  <div class="form-group">
-  <label for="create">Create</label>
-  <input type="radio" ng-model="selected" name="action" value="create" class="form-control" id="create">
+<div id="controls">
+  <div class="container">
+  <div class="row no-gutters">
+    <div class="col-sm">
+      <div class="form-group">
+      <label for="create">Create</label>
+      <input type="radio" ng-model="selected" name="action" value="create" id="create">
+      </div>
+      <div class="form-group">
+      <label for="update">Update</label>
+      <input type="radio" ng-model="selected" name="action" value="update" id="update">
+      </div>
+      <div class="form-group">
+      <label for="destroy">Destroy</label>
+      <input type="radio" ng-model="selected" name="action" value="destroy" id="destroy">
+      </div>
+    </div>
+    <div class="col-sm">
+      <div class="form-group">
+      <label for="measureNumber">Measure Number</label>
+      <input type="number" ng-disabled="selected==='create'" ng-model="measureNumber" id="measureNumber" class="form-control input-sm" required>
+      </div>
+      <div class="form-group">
+      <label for="measureValue">Measure Value</label>
+      <input type="text" ng-disabled="selected==='destroy'" ng-model="measureValue" id="measureValue" class="form-control input-sm" required>
+      </div>
+    </div>
+    <div class="col-sm">
+      <button class="btn btn-default" ng-click="kickoff()">Go</button><br>
+      <div class="form-group">
+      <label for="searchText">Look for inspiration</label>
+      <input type="text" id="searchText" class="form-control input-sm" ng-model="searchText">
+      </div>
+      <button class="btn btn-default " ng-click="search()">Search</button>
+      <i class="fa fa-spinner" style="display:none" style="font-size:24px"></i><br>
+      <select ng-model="selectedSong" ng-options="x for x in songtitles" ng-show="songtitles.length>0"></select>
+      <input type="submit" ng-click="selectFromApi()">
+      <button type="button" ng-click="renderMidi()">Listen to MIDI</button>
+      <button ng-click="toSoundCloud()">Upload to SoundCloud</button>
+    </div> <!-- end col -->
+  </div> <!-- end row -->
+  
   </div>
-  <div class="form-group">
-  <label for="update">Update</label>
-  <input type="radio" ng-model="selected" name="action" value="update" class="form-control" id="update">
-  </div>
-  <div class="form-group">
-  <label for="destroy">Destroy</label>
-  <input type="radio" ng-model="selected" name="action" value="destroy" class="form-control" id="destroy">
-  </div>
-
-  <div class="form-group">
-  <label for="measureNumber">Measure Number</label>
-  <input type="number" ng-disabled="selected==='create'" ng-model="measureNumber" id="measureNumber" class="form-control" required>
-  </div>
-  <div class="form-group">
-  <label for="measureValue">Measure Value</label>
-  <input type="text" ng-disabled="selected==='destroy'" ng-model="measureValue" id="measureValue" required>
-  </div>
-  <button class="btn btn-default" ng-click="kickoff()">Go</button>
-  <label for="searchText">Look for inspiration</label>
-  <input type="text" id="searchText" class="form-control" ng-model="searchText">
-  <button class="btn btn-default" ng-click="search()">Search</button>
-  <i class="fa fa-spinner" style="display:none;" style="font-size:24px"></i><br>
-  <select ng-model="selectedSong" ng-options="x for x in songtitles">
-  </select>
-  <input type="submit" ng-click="selectFromApi()">
-  <input type="button" ng-click="renderMidi()">
-  <input type="button" ng-click="toSoundCloud()">
   </div>
 </div>

@@ -137,22 +137,32 @@ module.exports = {
         req.file('myFile.mid').upload({saveAs:uid+'.mid'},function (err, uploadedFiles){
           if (err) return res.send(500, err);
           
-            var wavF = uploadedFiles[0].fd.slice(0,-3) + 'wav';
+            var wav = uploadedFiles[0].fd.slice(0,-3) + 'wav';
+            var mp3 = uploadedFiles[0].fd.slice(0,-3) + 'mp3';
             const exec = require('child_process').exec;
             
-            var command = 'timidity ' + uploadedFiles[0].fd + ' -Ow -o ' + wavF;
-            exec(command, function(err, stdout, stderr) {
+            var toWAV = 'timidity ' + uploadedFiles[0].fd + ' -Ow -o ' + wav;
+            var toMP3 = 'lame -V2 ' + wav + ' ' + mp3;
+            exec(toWAV, function(err, stdout, stderr) {
                 if(err) {
                   sails.log.debug(err);
                 }
                
                 sails.log.debug(stdout);
                 sails.log.debug(stderr);
-                var buffer = fs.readFileSync(wavF);
-                res.set('Content-Type', 'audio/wav');
-                res.send(buffer);
+                
+                exec(toMP3, function(err, stdout, stderr) {
+                    if(err) {
+                        sails.log.debug(err);
+                    }
+                    sails.log.debug(stdout);
+                    sails.log.debug(stderr);
+                    fs.unlink(wav);
+                    var buffer = fs.readFileSync(mp3);
+                    res.set('Content-Type', 'audio/mp3');
+                    res.send(buffer);
+                });
             });
-            
-          });
-        }
+        });
+    }
 };
