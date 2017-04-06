@@ -130,13 +130,22 @@ module.exports = {
 
         });
     },
+    'museScore' : function (req, res) {
+      /*  Score Files URLs
+
+      You can construct the source URL to score files once you know its ID and its secret, as returned by many API methods.
+
+      The URL takes the following format: http://static.musescore.com/{id}/{secret}/score.{extension}
+      Where extension can be anything in pdf, mid (General MIDI), mxl (Compressed MusicXML), mscz (MuseScore file), mp3.
+      */
+    },
     'convertMidi': function(req, res) {
         var fs = require('fs');
         var uuid = require('uuid');
         var uid = uuid();
-        req.file('myFile.mid').upload({saveAs:uid+'.mid'},function (err, uploadedFiles){
+        req.file('myFile.mid').upload({saveAs:uid+'.mid',dirname: require('path').resolve(sails.config.appPath, '.tmp/public/uploads')},function (err, uploadedFiles){
           if (err) return res.send(500, err);
-          
+            sails.log.debug(uploadedFiles);
             var wav = uploadedFiles[0].fd.slice(0,-3) + 'wav';
             var mp3 = uploadedFiles[0].fd.slice(0,-3) + 'mp3';
             const exec = require('child_process').exec;
@@ -158,9 +167,33 @@ module.exports = {
                     sails.log.debug(stdout);
                     sails.log.debug(stderr);
                     fs.unlink(wav);
-                    var buffer = fs.readFileSync(mp3);
-                    res.set('Content-Type', 'audio/mp3');
-                    res.send(buffer);
+                    
+                    var FormData = require('form-data');
+                    var form = new FormData();
+                    sails.log.debug(mp3);
+                    form.append('input_file', fs.createReadStream(mp3));
+                    form.append('access_id','7949e018-3d19-48fb-8439-c465b93af99e');
+                    form.append('format','json');
+                    form.append('begin_seconds','');
+                    form.append('end_seconds','');
+                    sails.log.debug(form);
+                    form.submit('https://api.sonicapi.com/analyze/chords',function(err,submit) {
+                        if(err) {sails.log.debug(err)};
+                        var data;
+                        submit.on('data', function(chunk) {
+                            sails.log.debug(chunk);
+                            data += chunk;
+                            
+                        });
+                        submit.on('end', function() {
+                            res.json(data);
+                        });
+                        
+                        
+                    });
+                    
+                   
+                   
                 });
             });
         });
