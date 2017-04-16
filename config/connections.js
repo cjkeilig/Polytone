@@ -46,8 +46,17 @@ module.exports.connections = {
     user: 'worker', //optional
     password: 'password', // real secure
     database: 'polytone'
+  },
+  
+  heroku_postgres : {
+    adapter: 'sails-postgresql',
+    user: 'btdvbqdupkaiit',
+    password: 'fc1b14ba124ea3e5d06d1bf8bb3fe04f3710e70153199927c8a59821f8d4b843',
+    host: 'ec2-23-23-225-116.compute-1.amazonaws.com',
+    port: '5432',
+    database: 'd1of1fnj600pph',
+    ssl: false
   }
-
   /***************************************************************************
   *                                                                          *
   * MongoDB is the leading NoSQL database.                                   *

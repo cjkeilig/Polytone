@@ -17,7 +17,9 @@ module.exports.models = {
   * connections (see `config/connections.js`)                                *
   *                                                                          *
   ***************************************************************************/
+  //toggle below for hosting on cloud
   connection: 'sailsMySQL',
+ // connection: 'heroku_postgres',
 
   /***************************************************************************
   *                                                                          *

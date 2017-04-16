@@ -84,7 +84,7 @@
       $scope.selectedSong = "";
       $scope.searchText = "";
       $scope.chords = {};
-      $scope.chord = "test";
+      $scope.chord = "";
       io.socket.on('connect', function() {
       io.socket.get('/score/joinRoom/'+<%=score.id%>, function(resData, jwres) {console.log(resData);});
       if (!io.socket.alreadyListeningToMeasures) {
@@ -130,8 +130,6 @@
       }
     });
       $scope.toSoundCloud = function () {
-        console.log($('.download-midi a').attr('href'));
-       // $http({ method: 'POST', url:'/score/convertMidi', data: })
       }
       $scope.search = function() {
         // Simple GET request example:
@@ -141,18 +139,34 @@
           method: 'GET',
           url: '/score/search?title=' + $scope.searchText
         }).then(function successCallback(response) {
-          console.log(response);
-          $scope.songtitles = response.data.titles;
-          $scope.songlinks = response.data.links;
+          console.log(response.data.muse.titles2);
+          console.log(response.data.rudy.titles);
+          var tits = [];
+          var links = [];
+          tits = response.data.muse['titles2'].concat(response.data.rudy['titles']);
+          links = response.data.muse['links2'].concat(response.data.rudy['links']);
+          $scope.songtitles = tits;
+          $scope.songlinks = links;
+    
           $('.fa-spinner').hide();
           $('.fa-spinner').removeClass('fa-spin');
         }, function errorCallback(response) {
-        // called asynchronously if an error occurs
-        // or server returns response with an error status.
+          console.log(response);
         });
       }
-      $scope.selectFromApi = function() {
+      $scope.rudyRuckerApi = function() {
+        
         var link = $scope.songlinks[$scope.songtitles.indexOf($scope.selectedSong)];
+        if(link.startsWith('http://static.musescore.com')) {
+          $http({
+            method: 'GET',
+            url: '/score/museScore?link=' + encodeURIComponent(link)
+          }).then(function successCallback(response){
+            console.log(response);
+            $scope.abcTune2 = response.data;
+            ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true},{});
+          });
+        } else {
           $http({
             method: 'GET',
             url: '/score/selectFromApi?selected=' + encodeURIComponent(link)
@@ -161,26 +175,32 @@
               console.log(response);
               ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true},{});
             });
-  
+        }
       }
       $scope.renderMidi = function() {
         var tuneObjectArray = ABCJS.renderMidi('midi',$scope.abcTune, {},{generateInline:true,qpm:100, generateDownload:true},{});
-        console.log(tuneObjectArray[0]);
         var otherTune = $scope.tuneObjectArray[0];
         var output = document.getElementById('music');
         var tuneObject = tuneObjectArray[0];
-        console.log($('.download-midi a').attr('href'));
         $('.abcjs-midi-start').click(function() { 
           ABCJS.startAnimation(output, otherTune, {hideFinishedMeasures:false,showCursor:true,bpm:100});
-          for(var chor in $scope.chords) {
-            console.log($scope.chords[chor]);
-            setTimeout(function(theChord) {
+          for(var chor= 0; chor<$scope.chords.length; chor++) {
+            
+            var nextTime = 0;
+            if(chor<$scope.chords.length-1) {
+              nextTime = $scope.chords[chor+1].time;
+              
+            }
+            
+            setTimeout(function(theChord, next) {
+              
               $scope.chord = theChord.chord;
-              console.log(theChord.chord + " at " + theChord.time);
               $scope.$apply();
-            },$scope.chords[chor].time*1000, $scope.chords[chor]);
-          }
+              
+            },$scope.chords[chor].time*1000, $scope.chords[chor], nextTime);
           
+          
+         }
         });
         
         var blob = dataURItoBlob($('.download-midi a').attr('href'));
@@ -189,57 +209,23 @@
 
         fd.append('myFile.mid', blob);
         xhr.open('POST', '/score/convertMidi', true);
-        xhr.responseType = "json";
-        /*$.ajax({
-          url: '/score/convertMidi',
-          type: 'POST',
-          data: fd,
-          contentType:false,
-          processData:false,
-          success: function successCallback(data) {
-            console.log(data);
-          }
-        })*/
+        
         xhr.onload = function (oEvent) {
           $scope.chords = JSON.parse(xhr.response.slice(9)).chords_result.chords;// Note: not oReq.responseText
-          console.log($scope.chords);
-          /*if (arrayBuffer) {
-           var byteArray = new Uint8Array(arrayBuffer);
-           var blob2 = new Blob([byteArray], {type: 'audio/mp3'});
-           var file = new File([blob2], 'input_file', {type: 'audio/mp3', lastModified: Date.now()});
-           console.log(arrayBuffer);
-           setTimeout(function() {
-             var fd2 = new FormData(document.forms[0]);
-             
-             
-             fd2.append('input_file', blob2 );
-             fd2.append('access_id','7949e018-3d19-48fb-8439-c465b93af99e');
-             fd2.append('format','json');
-             fd2.append('begin_seconds','');
-             fd2.append('end_seconds','');
-              $.ajax({
-               url:'https://api.sonicapi.com/analyze/chords',
-               type:'POST',
-               data:fd2,
-               contentType:false,
-               processData:false,
-               success: function successCallback() {
-                 console.log("yay");
-                }
-             });
-           },10000);*/
-          
         };
         xhr.send(fd);
-        /*$.ajax({
-          url:'/score/convertMidi',
-          type:'POST',
-          data:$('.download-midi a').attr('href'),
-          contentType:'audio/midi',
-          success: function successCallback() {
-          console.log("yay");
-          }
-        }); */
+      }
+      $scope.foct = function () {
+        var file = $('#myfile')[0].files[0];
+        var fd = new FormData(document.forms[0]);
+        var xhr = new XMLHttpRequest();
+
+        fd.append('myfile', file);
+        xhr.open('POST', 'http://ct2.ofoct.com/upload.php', true);
+        xhr.withCredentials = true;
+        xhr.send(fd);
+        
+        //'http://ct2.ofoct.com/convert-file_v2.php?cid=audio2midi&output=MID&tmpfpath=' + xhr.response + '&row=file1&sourcename=' +  file.name + '&&rowid=file1'
       }
       $scope.kickoff = function() {
         console.log($scope.selected);
@@ -336,15 +322,20 @@
       <button class="btn btn-default " ng-click="search()">Search</button>
       <i class="fa fa-spinner" style="display:none" style="font-size:24px"></i><br>
       <select ng-model="selectedSong" ng-options="x for x in songtitles" ng-show="songtitles.length>0"></select>
-      <input type="submit" ng-click="selectFromApi()">
+      <input type="submit" ng-click="rudyRuckerApi()">
       <button type="button" ng-click="renderMidi()">Listen to MIDI</button>
-      <button ng-click="toSoundCloud()">Upload to SoundCloud</button>
+      <form method="post">
+      <input type="file" name="myfile" id="myfile" accept="audio/mp3">
+      <button ng-click="foct()">Upload</button>
+      </form>
     </div> <!-- end col -->
   </div> <!-- end row -->
   
   </div>
   </div>
-  <div id="chords">
+  <div id="chord">
+    
     <h3>{{ chord }}</h3>
   </div>
+  <div id="timer"></div>
 </div>
