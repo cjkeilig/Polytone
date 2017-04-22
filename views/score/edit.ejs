@@ -1,3 +1,28 @@
+<style>
+  .button {
+      display: inline-block;
+      background: #e2e2e2;
+      border: 0;
+      line-height: 2.5em;
+      padding: 0 0 0 1em;
+      margin-bottom: 1em;
+      outline: block;
+      color: #666;
+  }
+  .radio {
+      display: inline-block;
+      background: #e2e2e2;
+      border: 0;
+      line-height: 2.5em;
+      padding: 0 0 0 1em;
+      margin-bottom: 1em;
+      outline: block;
+      color: #666;
+  }
+  .body{
+    background-color: #4A96AD;
+  }
+</style>
 <script>
       'use strict';
       //below is client side js from soundlcoud. will be used when soundcloud gets back with our client id access
@@ -74,7 +99,7 @@
                        "\nK:"+$scope.tune.key + formatMeasures($scope.tune.measures) + "|";
       $scope.abcTune2 = "";
       
-      $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true},{});
+      $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,scale:.85,staffwidth:500},{});
       console.log($scope.abcTune);
       $scope.measureNumber = 0;
       $scope.measureValue = new String("");
@@ -102,7 +127,7 @@
                        "\nL:1/8"+
                        "\nK:"+$scope.tune.key + formatMeasures($scope.tune.measures) + "|";
               console.log($scope.abcTune);
-              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true},{});
+              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,scale:.85,staffwidth:500},{});
               
               // (re-render)
               break;
@@ -112,7 +137,7 @@
                        "\nM:"+$scope.tune.time+
                        "\nL:1/8"+
                        "\nK:"+$scope.tune.key + formatMeasures($scope.tune.measures) + "|";
-              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true},{});
+              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,scale:.85,staffwidth:500},{});
     			    // handle update
 					console.log($scope.abcTune);
     			    break;
@@ -122,7 +147,7 @@
                        "\nM:"+$scope.tune.time+
                        "\nL:1/8"+
                        "\nK:"+$scope.tune.key + formatMeasures($scope.tune.measures) + "|";
-              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true},{});
+              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,scale:.85,staffwidth:500},{});
 			  console.log($scope.abcTune);
     			    break;
             default: return; // ignore any unrecognized messages
@@ -165,7 +190,7 @@
           }).then(function successCallback(response){
             console.log(response);
             $scope.abcTune2 = response.data;
-            ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true},{});
+            ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true,scale:.85,staffwidth:500},{});
           });
         } else {
           $http({
@@ -174,7 +199,7 @@
             }).then(function successCallback(response) { 
               $scope.abcTune2 = response.data.abc;
               console.log(response);
-              ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true},{});
+              ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true,scale:.85,staffwidth:500},{});
             });
         }
       }
@@ -237,7 +262,7 @@
         xhr.onload = function(oEvent) {
           $scope.abcTune2 = JSON.parse(xhr.response);
           
-          ABCJS.renderAbc('music2',$scope.abcTune2,{},{add_classes:true},{});
+          ABCJS.renderAbc('music2',$scope.abcTune2,{},{add_classes:true,scale:.85,staffwidth:500},{});
         }
         xhr.send(fd);
         
@@ -284,15 +309,6 @@
     });
 </script>
 <div ng-app="myApp" ng-controller="scoreCtrl">
-<div id="rudyruckerapi" style="float:right;max-width:50%;">
-  <div id="midi2"></div>
-  <div id="warnings2"></div>
-  <div id="music2"></div>
-  <div id="paper02"></div>
-  <div id="paper12"></div>
-  <div id="paper22"></div>
-  <div id="paper32"></div>
-</div>
 <div id="apiside" style="float:right;max-width:50%;">
   <div id="midi2"></div>
   <div id="warnings2"></div>
@@ -302,7 +318,7 @@
   <div id="paper22"></div>
   <div id="paper32"></div>
 </div>
-<div id="mainEditor">
+<div id="mainEditor" style="max-width:40%;">
 <div id="midi"></div>
 <div id="warnings"></div>
 <div id="music"></div>
@@ -312,7 +328,7 @@
 <div id="paper3"></div>
 </div>
 
-<div id="controls" style="max-width=50%">
+<div id="controls" style="">
   <div class="container">
     <div class="row">
       <div class="col">
