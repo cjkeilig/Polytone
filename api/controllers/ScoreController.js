@@ -207,48 +207,49 @@ module.exports = {
         });
     },
     'upload': function(req, res) { 
-        var file = req.param('user_file');
-        console.log(file);
+        var fs = require('fs');
         const exec = require('child_process').exec;
         var uuid = require('uuid');
         
-        req.file('user_file').upload({saveAs:uuid()+'.mp3',dirname: require('path').resolve(sails.config.appPath, '.tmp/private/uploads')},function (err, uploadedFiles){ 
+        req.file('myfile').upload({saveAs:uuid()+'.mp3',dirname: require('path').resolve(sails.config.appPath, '.tmp/public/uploads')},function (err, uploadedFiles){ 
             if(err) { sails.log.debug(err);}
             console.log(uploadedFiles[0]);
-           // figure out why mp3 are not saving 
-            
+            var mp3 = uploadedFiles[0].fd;
+            var wav = mp3.slice(0,-3) + 'wav';
+            var mid = mp3.slice(0,-3) + 'mid';
+           
+             exec('lame --decode ' + mp3 + ' ' + wav, function(err, stdout, stderr) {
+                 if(err||stderr) {console.log(err);console.log(stderr);}
+                 exec('./waon -i ' + wav + ' -o ' + mid, function(err, stdout, stderr) {
+                     if(err||stderr) {console.log(err);console.log(stderr);}
+                     exec('midi2abc ' + mid, function(err, stdout, stderr) {
+                         if(err||stderr) {console.log(err);console.log(stderr);}
+                         res.json(stdout.split('\n').join('\n'));
+                     });
+                 });
+             });
         });
 
         
     },
-  /*  Request URL:http://ct2.ofoct.com/upload.php
-Request Method:OPTIONS
-Status Code:200 OK
-Remote Address:69.164.215.182:80
-Referrer Policy:no-referrer-when-downgrade
-Response Headers
-view source
-Access-Control-Allow-Origin:http://www.ofoct.com
-Connection:Keep-Alive
-Content-Encoding:gzip
-Content-Length:20
-Content-Type:text/html
-Date:Sun, 16 Apr 2017 15:28:11 GMT
-Keep-Alive:timeout=15, max=100
-Server:Apache/2.2.14 (Ubuntu)
-Vary:Accept-Encoding
-X-Powered-By:PHP/5.3.2-1ubuntu4.19
-Request Headers
-view source
-Accept: 
-Accept-Encoding:gzip, deflate, sdch
-Accept-Language:en-US,en;q=0.8
-Access-Control-Request-Method:POST
-Connection:keep-alive
-Host:ct2.ofoct.com
-Origin:http://www.ofoct.com
-Referer:http://www.ofoct.com/audio-converter/convert-wav-or-mp3-ogg-aac-wma-to-midi.html
-User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36 */
+    'getYoutube': function(req, res) {
+        //www.youtubeinmp3.com/fetch/?format=text&video=https://www.youtube.com/watch?v=i62Zjga8JOM
+        var http = require('http');
+        var endpoint = 'www.youtubeinmp3.com/fetch/?format=text&video=' + decodeURIComponent(req.param('url'));
+        http.get(endpoint, function(response) {
+            var data = {};
+            response.on('data', function(chunk) {
+                data += chunk;
+            })
+            response.on('end', function() {
+                console.log(data);
+            });
+            
+            
+        });
+        // use youtube to mp3 api to download mp3, turn in wav, midi, abc, send back and display in abcTune2
+        
+    },
     'convertMidi': function(req, res) {
         var fs = require('fs');
         var uuid = require('uuid');

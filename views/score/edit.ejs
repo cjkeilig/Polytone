@@ -85,6 +85,7 @@
       $scope.searchText = "";
       $scope.chords = {};
       $scope.chord = "";
+      $scope.youtubeurl = "";
       io.socket.on('connect', function() {
       io.socket.get('/score/joinRoom/'+<%=score.id%>, function(resData, jwres) {console.log(resData);});
       if (!io.socket.alreadyListeningToMeasures) {
@@ -211,21 +212,43 @@
         xhr.open('POST', '/score/convertMidi', true);
         
         xhr.onload = function (oEvent) {
-          $scope.chords = JSON.parse(xhr.response.slice(9)).chords_result.chords;// Note: not oReq.responseText
+      
+          var text = xhr.response.slice(10);
+          text = text.substring(0, text.length-1);
+          text = text.split('\\');
+          text = text.join('');
+          console.log(JSON.parse(text));
+          $scope.chords = JSON.parse(text).chords_result.chords;// Note: not oReq.responseText
         };
         xhr.send(fd);
       }
       $scope.foct = function () {
         var file = $('#myfile')[0].files[0];
-        var fd = new FormData(document.forms[0]);
+        console.log(file);
+    
+        var fd = new FormData(document.forms[1]);
         var xhr = new XMLHttpRequest();
 
         fd.append('myfile', file);
-        xhr.open('POST', 'http://ct2.ofoct.com/upload.php', true);
-        xhr.withCredentials = true;
+        xhr.open('POST', '/score/upload', true);
+        xhr.onload = function(oEvent) {
+          $scope.abcTune2 = JSON.parse(xhr.response);
+          
+          ABCJS.renderAbc('music2',$scope.abcTune2,{},{add_classes:true},{});
+        }
         xhr.send(fd);
         
-        //'http://ct2.ofoct.com/convert-file_v2.php?cid=audio2midi&output=MID&tmpfpath=' + xhr.response + '&row=file1&sourcename=' +  file.name + '&&rowid=file1'
+  
+      }
+      $scope.getYoutube = function(url) {
+        $http({
+            method: 'GET',
+            url: '/score/getYoutube?url=' + encodeURIComponent(url)
+            }).then(function successCallback(response) { 
+              //$scope.abcTune2 = response.data.abc;
+              console.log(response);
+              //ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true},{});
+            });
       }
       $scope.kickoff = function() {
         console.log($scope.selected);
@@ -267,7 +290,7 @@
   <div id="paper22"></div>
   <div id="paper32"></div>
 </div>
-<div id="musescoreapi" style="float:right;max-width:50%;">
+<!--<div id="musescoreapi" style="float:right;max-width:50%;">
   <div id="midi2"></div>
   <div id="warnings2"></div>
   <div id="music2"></div>
@@ -275,7 +298,7 @@
   <div id="paper12"></div>
   <div id="paper22"></div>
   <div id="paper32"></div>
-</div>
+</div>-->
 <div id="mainEditor">
 <div id="midi"></div>
 <div id="warnings"></div>
@@ -288,54 +311,41 @@
 
 <div id="controls">
   <div class="container">
-  <div class="row no-gutters">
-    <div class="col-sm">
-      <div class="form-group">
-      <label for="create">Create</label>
-      <input type="radio" ng-model="selected" name="action" value="create" id="create">
+    <div class="row">
+      <div class="col">
+        
+        Create<input type="radio" ng-model="selected" name="action" value="create" id="create">
+        
+        Update<input type="radio" ng-model="selected" name="action" value="update" id="update">
+        
+        Destroy<input type="radio" ng-model="selected" name="action" value="destroy" id="destroy">
+        
       </div>
-      <div class="form-group">
-      <label for="update">Update</label>
-      <input type="radio" ng-model="selected" name="action" value="update" id="update">
-      </div>
-      <div class="form-group">
-      <label for="destroy">Destroy</label>
-      <input type="radio" ng-model="selected" name="action" value="destroy" id="destroy">
-      </div>
+    <div class="col">
+      Measure Number<input type="number" ng-disabled="selected==='create'" ng-model="measureNumber" id="measureNumber" class="form-control input-sm" required>
+      
+      Measure Value<input type="text" ng-disabled="selected==='destroy'" ng-model="measureValue" id="measureValue" class="form-control input-sm" required>
     </div>
-    <div class="col-sm">
-      <div class="form-group">
-      <label for="measureNumber">Measure Number</label>
-      <input type="number" ng-disabled="selected==='create'" ng-model="measureNumber" id="measureNumber" class="form-control input-sm" required>
-      </div>
-      <div class="form-group">
-      <label for="measureValue">Measure Value</label>
-      <input type="text" ng-disabled="selected==='destroy'" ng-model="measureValue" id="measureValue" class="form-control input-sm" required>
-      </div>
-    </div>
-    <div class="col-sm">
+    <div class="col">
       <button class="btn btn-default" ng-click="kickoff()">Go</button><br>
-      <div class="form-group">
-      <label for="searchText">Look for inspiration</label>
-      <input type="text" id="searchText" class="form-control input-sm" ng-model="searchText">
-      </div>
+      Look for Inspiration<input type="text" id="searchText" ng-model="searchText">
+      
       <button class="btn btn-default " ng-click="search()">Search</button>
       <i class="fa fa-spinner" style="display:none" style="font-size:24px"></i><br>
       <select ng-model="selectedSong" ng-options="x for x in songtitles" ng-show="songtitles.length>0"></select>
       <input type="submit" ng-click="rudyRuckerApi()">
       <button type="button" ng-click="renderMidi()">Listen to MIDI</button>
-      <form method="post">
+    
       <input type="file" name="myfile" id="myfile" accept="audio/mp3">
-      <button ng-click="foct()">Upload</button>
-      </form>
+      <button ng-click="foct()">Submit</button>
+      <input type="text" ng-model="youtubeurl">
+      <button ng-click="getYoutube(youtubeurl)">Get music from YouTube video</button>
     </div> <!-- end col -->
   </div> <!-- end row -->
-  
-  </div>
-  </div>
-  <div id="chord">
-    
-    <h3>{{ chord }}</h3>
-  </div>
-  <div id="timer"></div>
+</div> <!-- end container -->
+<div id="chord">
+  <h3>{{ chord }}</h3>
+</div>
+<div id="timer"></div>
+<a href="http://abcnotation.com/wiki/abc:standard:v2.1">Learn how ABC notation works, ABC documentation</a>
 </div>
