@@ -1,4 +1,7 @@
 <style>
+  #controls {
+    max-width:50%;
+  }
   .button {
       display: inline-block;
       background: #e2e2e2;
@@ -19,34 +22,11 @@
       outline: block;
       color: #666;
   }
-  .body{
-    background-color: #4A96AD;
+  body{
   }
 </style>
 <script>
       'use strict';
-      //below is client side js from soundlcoud. will be used when soundcloud gets back with our client id access
-      //<script src="https://connect.soundcloud.com/sdk/sdk-3.1.2.js">
-      //SC.initialize({
-      //  client_id: 'YOUR_CLIENT_ID',
-      //  redirect_uri: 'http://example.com/callback'
-      //});
-      // initiate auth popup
-      //SC.connect().then(function() {
-      //  return SC.get('/me');
-      //}).then(function(me) {
-      //alert('Hello, ' + me.username);
-      // });
-       
-      // Upload to SoundCloud
-      // When you have recorded a song with the SDK or any Web Audio application,
-      // you can upload it if it's in a format that is accepted
-      //SC.upload({
-      // file: theBlob, // a Blob of your WAV, MP3...
-      //  title: 'This is my sound'
-      //});
-      
-      
       angular.module("myApp", [])
           .controller("scoreCtrl", function ($scope, $http) {
             
@@ -99,7 +79,7 @@
                        "\nK:"+$scope.tune.key + formatMeasures($scope.tune.measures) + "|";
       $scope.abcTune2 = "";
       
-      $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,scale:.85,staffwidth:500},{});
+      $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,staffwidth:500},{});
       console.log($scope.abcTune);
       $scope.measureNumber = 0;
       $scope.measureValue = new String("");
@@ -127,7 +107,7 @@
                        "\nL:1/8"+
                        "\nK:"+$scope.tune.key + formatMeasures($scope.tune.measures) + "|";
               console.log($scope.abcTune);
-              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,scale:.85,staffwidth:500},{});
+              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,staffwidth:500},{});
               
               // (re-render)
               break;
@@ -137,7 +117,7 @@
                        "\nM:"+$scope.tune.time+
                        "\nL:1/8"+
                        "\nK:"+$scope.tune.key + formatMeasures($scope.tune.measures) + "|";
-              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,scale:.85,staffwidth:500},{});
+              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,staffwidth:500},{});
     			    // handle update
 					console.log($scope.abcTune);
     			    break;
@@ -147,7 +127,7 @@
                        "\nM:"+$scope.tune.time+
                        "\nL:1/8"+
                        "\nK:"+$scope.tune.key + formatMeasures($scope.tune.measures) + "|";
-              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,scale:.85,staffwidth:500},{});
+              $scope.tuneObjectArray = ABCJS.renderAbc("music", $scope.abcTune,{},{add_classes:true,staffwidth:500},{});
 			  console.log($scope.abcTune);
     			    break;
             default: return; // ignore any unrecognized messages
@@ -190,7 +170,7 @@
           }).then(function successCallback(response){
             console.log(response);
             $scope.abcTune2 = response.data;
-            ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true,scale:.85,staffwidth:500},{});
+            ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true,staffwidth:500},{});
           });
         } else {
           $http({
@@ -199,15 +179,15 @@
             }).then(function successCallback(response) { 
               $scope.abcTune2 = response.data.abc;
               console.log(response);
-              ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true,scale:.85,staffwidth:500},{});
+              ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true,staffwidth:500},{});
             });
         }
       }
       $scope.renderMidi2 = function () {
-        var tuneObjectArray2 = ABCJS.renderMidi('midi2',$scope.abcTune2, {},{generateInline:true,qpm:100, generateDownload:true},{});
+        var tuneObjectArray2 = ABCJS.renderMidi('midi2',$scope.abcTune2, {},{generateInline:true, generateDownload:true},{});
       }
       $scope.renderMidi = function() {
-        var tuneObjectArray = ABCJS.renderMidi('midi',$scope.abcTune, {},{generateInline:true,qpm:100, generateDownload:true},{});
+        var tuneObjectArray = ABCJS.renderMidi('midi',$scope.abcTune, {},{generateInline:true, generateDownload:true},{});
         var otherTune = $scope.tuneObjectArray[0];
         var output = document.getElementById('music');
         var tuneObject = tuneObjectArray[0];
@@ -251,32 +231,42 @@
         xhr.send(fd);
       }
       $scope.foct = function () {
+        
         var file = $('#myfile')[0].files[0];
-        console.log(file);
-    
+       /* if($scope.youtubeurl && file) {
+          console.log("you cannot do both at the same time");
+          return;
+        }*/
+        var loc;
+        if(file) {
         var fd = new FormData(document.forms[1]);
+        fd.append('myfile', file);
+        loc = '/score/upload';
+        }
+        else {
+        loc = '/measure/upload/?url=' + encodeURIComponent($scope.youtubeurl);
+        }
+        
         var xhr = new XMLHttpRequest();
 
-        fd.append('myfile', file);
-        xhr.open('POST', '/score/upload', true);
+        xhr.open('POST', loc, true);
         xhr.onload = function(oEvent) {
           $scope.abcTune2 = JSON.parse(xhr.response);
           
-          ABCJS.renderAbc('music2',$scope.abcTune2,{},{add_classes:true,scale:.85,staffwidth:500},{});
+          ABCJS.renderAbc('music2',$scope.abcTune2,{},{add_classes:true,staffwidth:500},{});
         }
-        xhr.send(fd);
+        if(file) {
+            xhr.send(fd);
+        } else {
+          xhr.send();
+        }
         
   
       }
-      $scope.getYoutube = function(url) {
-        $http({
-            method: 'GET',
-            url: '/score/getYoutube?url=' + encodeURIComponent(url)
-            }).then(function successCallback(response) { 
-              //$scope.abcTune2 = response.data.abc;
-              console.log(response);
-              //ABCJS.renderAbc('music2', $scope.abcTune2,{},{add_classes:true},{});
-            });
+      $scope.getYoutube = function() {
+        io.socket.post('/measure/upload', {url:$scope.youtubeurl} , function(resData, jwRes) {
+          console.log(resData);
+        })
       }
       $scope.kickoff = function() {
         console.log($scope.selected);
@@ -328,45 +318,54 @@
 <div id="paper3"></div>
 </div>
 
-<div id="controls" style="">
-  <div class="container">
-    <div class="row">
-      <div class="col">
-        
+<div id="controls" style="margin-left:10px;float:left;">
+    <ul class="nav nav-tabs">
+    <li class="active"><a href="#manual" data-toggle="tab">Edit</a></li>
+    <li><a href="#inspiration" data-toggle="tab">Browse</a></li>
+    <li><a href="#upload" data-toggle="tab">Upload</a></li>
+    </ul>
+    <br>
+  
+  
+  <div class="tab-content clearfix">
+   <div id="manual" class="tab-pane active">
         Create<input type="radio" ng-model="selected" name="action" value="create" id="create">
         
         Update<input type="radio" ng-model="selected" name="action" value="update" id="update">
         
         Destroy<input type="radio" ng-model="selected" name="action" value="destroy" id="destroy">
         
-      </div>
-      <div class="col">
       Measure Number<input type="number" ng-disabled="selected==='create'" ng-model="measureNumber" id="measureNumber" required>
       
       Measure Value<input type="text" ng-disabled="selected==='destroy'" ng-model="measureValue" id="measureValue" required>
-      </div>
-      <div class="col">
-      <button ng-click="kickoff()">Go</button><br>
+       <button ng-click="kickoff()">Go</button><br>
+    </div>
+
+    <div class="tab-pane" id="inspiration">
       Look for Inspiration<input type="text" id="searchText" ng-model="searchText">
-      
+    
       <button ng-click="search()">Search</button>
       <i class="fa fa-spinner" style="display:none" style="font-size:24px"></i><br>
       <select ng-model="selectedSong" ng-options="x for x in songtitles" ng-show="songtitles.length>0"></select>
       <input type="submit" ng-click="rudyRuckerApi()">
+    </div>
+    <div class="tab-pane" id="upload">
+      <input type="file" name="myfile" id="myfile" accept="audio/mp3">
+      <input type="text" ng-model="youtubeurl">
+      <button ng-click="getYoutube()">Submit</button>
+    </div>
+    </div>
+   <br>
+   <br>
+   <br>
       <button type="button" ng-click="renderMidi()">Listen to MIDI</button>
       <button type="button" ng-click="renderMidi2()">Listen to MIDI2</button>
-    
-      <input type="file" name="myfile" id="myfile" accept="audio/mp3">
-      <button ng-click="foct()">Submit</button>
-      <input type="text" ng-model="youtubeurl">
-      <button ng-click="getYoutube(youtubeurl)">Get music from YouTube video</button>
-      </div> <!-- end col -->
-    </div> <!-- end row -->
-  </div> <!-- end container -->
-</div>
-<div id="chord">
+      <br><br>
+       
+      <!-- <a href="/score/yt">Get music from a Youtube video</a> -->
+    <div id="chord">
   <h3>{{ chord }}</h3>
 </div>
-<div id="timer"></div>
-<a href="http://abcnotation.com/wiki/abc:standard:v2.1">Learn how ABC notation works, ABC documentation</a>
+<footer><div id="timer"></div><a href="http://abcnotation.com/wiki/abc:standard:v2.1" target="_blank">Learn how ABC notation works, ABC documentation</a></footer></div>  
 </div>
+

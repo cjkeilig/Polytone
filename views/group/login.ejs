@@ -1,6 +1,18 @@
-<script>window.onload=function() { var app = angular.module("myApp",[]);}</script>
+<script>
+window.onload=function() { var app = angular.module("myApp",[]);
+if(window.location.href.endsWith('try_again')){
+    console.log($('.alert'));
+    $('#alert').show();
+} else { 
+    $('#alert').hide();
+}
+}
+</script>
 <div class="jumbotron vertical-center">
     <div class="container text-center">
+        <div id="alert" class="alert alert-warning">
+            <strong>Please enter a valid group name</strong>
+        </div>
         <form method="POST" action="/score/show">
             <div class="form-group">
                 <div class="input-group input-group-lg">

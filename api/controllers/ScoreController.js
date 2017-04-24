@@ -23,6 +23,10 @@ module.exports = {
                 sails.log.debug(err);
             }
 			sails.log.debug(group);
+			if(!group) {
+			    res.redirect('/?try_again');
+			    return;
+			}
             if(!group.scores) {
                 group.scores = ['none'];
             }
@@ -79,7 +83,7 @@ module.exports = {
         // make sure title is more than 4 letters
         http.get({
             host: 'rudy-rucker.mit.edu',
-            path: '/~jc/cgi/abc/tunefind?P=' + req.param('title') + '&find=FIND&m=title&W=wide&scale=1&limit=1000&thresh=5&fmt=single&V=1&Tsel=tune&Nsel=0'
+            path: '/~jc/cgi/abc/tunefind?P=' + encodeURIComponent(req.param('title')) + '&find=FIND&m=title&W=wide&scale=1&limit=1000&thresh=5&fmt=single&V=1&Tsel=tune&Nsel=0'
         }, function(response) {
             // Continuously update stream with data
             var body = '';
@@ -110,7 +114,7 @@ module.exports = {
         function(callback) {
         var key = 'niFGLBU4PnGmV3T5KZsLASysX4Egd2Ad';
         var term = req.param('title');
-        var endpoint = 'http://api.musescore.com/services/rest/score.json?oauth_consumer_key=' + key + '&text='+ term + '&part=0';
+        var endpoint = 'http://api.musescore.com/services/rest/score.json?oauth_consumer_key=' + key + '&text='+ encodeURIComponent(term) + '&part=0';
         http.get(endpoint, function(response){
             var data = '';
             response.on('data', function(chunk) {
@@ -207,6 +211,22 @@ module.exports = {
         });
     },
     'upload': function(req, res) { 
+        /*if(decodeURIComponent(req.param('url'))) {
+            console.log('youtube');
+            var http = require('http');
+            var endpoint = 'www.youtubeinmp3.com/fetch/?format=text&video=' + decodeURIComponent(req.param('url'));
+            http.get(endpoint, function(response) {
+                var data;
+                response.on('data', function(chunk) {
+                    data += chunk;
+                });
+                response.on('end', function() {
+                    console.log(data);
+                    res.json(data);
+                    
+                });
+            });
+        }*/
         var fs = require('fs');
         const exec = require('child_process').exec;
         var uuid = require('uuid');
@@ -230,24 +250,6 @@ module.exports = {
              });
         });
 
-        
-    },
-    'getYoutube': function(req, res) {
-        //www.youtubeinmp3.com/fetch/?format=text&video=https://www.youtube.com/watch?v=i62Zjga8JOM
-        var http = require('http');
-        var endpoint = 'www.youtubeinmp3.com/fetch/?format=text&video=' + decodeURIComponent(req.param('url'));
-        http.get(endpoint, function(response) {
-            var data = {};
-            response.on('data', function(chunk) {
-                data += chunk;
-            })
-            response.on('end', function() {
-                console.log(data);
-            });
-            
-            
-        });
-        // use youtube to mp3 api to download mp3, turn in wav, midi, abc, send back and display in abcTune2
         
     },
     'convertMidi': function(req, res) {
@@ -308,5 +310,27 @@ module.exports = {
                 });
             });
         });
+    },
+    'yt' : function(req, res) {
+        res.view('score/yt');
+    },
+    'youtube' : function(req, res) {
+        //www.youtubeinmp3.com/fetch/?format=text&video=https://www.youtube.com/watch?v=i62Zjga8JOM
+        var http = require('http');
+        var endpoint = 'www.youtubeinmp3.com/fetch/?format=text&video=' + decodeURIComponent(req.param('url'));
+        http.get(endpoint, function(response) {
+            var data;
+            response.on('data', function(chunk) {
+                data += chunk;
+            })
+            response.on('end', function() {
+                console.log(data);
+                res.json(data);
+            });
+        
+            
+        });
+        // use youtube to mp3 api to download mp3, turn in wav, midi, abc, send back and display in abcTune2
+        
     }
 };

@@ -40,5 +40,20 @@ module.exports = {
         Measure.create(req.allParams()).exec(function(err, measure) {
            sails.sockets.broadcast(req.param('owner').toString(), { verb: 'created', measure: measure }); 
         });
+    },
+    upload: function(req, res) {
+        var http = require('http');
+            var endpoint = 'www.youtubeinmp3.com/fetch/?format=text&video=' + decodeURIComponent(req.param('url'));
+            http.get(endpoint, function(response) {
+                var data;
+                response.on('data', function(chunk) {
+                    data += chunk;
+                });
+                response.on('end', function() {
+                    console.log(data);
+                    res.json(data);
+                    
+                });
+            });
     }
 };
